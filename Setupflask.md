@@ -120,4 +120,93 @@ With this basic setup, you can:
 This structure provides a flexible foundation to continue building your Flask application.
 
 ---
+## Stage one till now we have things as follows
 
+```
+project-root/
+├── .venv/                  # Virtual environment (not committed to Git)
+├── main.py                 # Main entry point for the application
+├── SampleModule/           # Main package containing application logic
+│   ├── __init__.py         # Makes the folder a Python package
+│   ├── models.py           # Database models
+│   ├── views.py            # Request handlers
+│   ├── auth.py             # Authentication and authorization
+```
+**main.py**
+```python
+from samplemodule import create_app
+
+app=create_app()
+
+if __name__ == '__main__':
+    app.run(debug=True)
+    
+```
+**__init__.py**
+```python
+# This file is used to initialize the Flask application and the database
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from os import path
+from  flask_login import LoginManager
+
+db = SQLAlchemy()
+DB_NAME = "database.db"
+def create_app():
+    # create app instance
+    app = Flask(__name__)
+
+    # set app configurations
+    app.config['SECRET_KEY'] = 'secretkey'  # we can generate a secret key using os.urandom(24)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    db.init_app(app) # initialize database
+  
+    from .models import User  
+    create_database(app)
+
+
+    return app
+
+def create_database(app):
+        with app.app_context():          
+            db.create_all()
+            print('Created Database!')
+
+```
+
+**Auth.py**
+This is emptyh as of now
+
+**views.py**
+```python
+from flask import Blueprint, render_template, request, flash, redirect, url_for
+
+views = Blueprint('views', __name__)
+```
+
+**models.py**
+
+```python
+from . import db
+from flask_login import UserMixin
+from datetime import datetime
+
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), unique=True)
+    password = db.Column(db.String(150))
+    first_name = db.Column(db.String(150))
+    date_created = db.Column(db.DateTime,nullable=False, default=datetime.utcnow().date())
+    updated_date = db.Column(db.DateTime,nullable=False, default=datetime.utcnow().date())
+
+
+class Note(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.String(10000))
+    date_created = db.Column(db.DateTime,nullable=False, default=datetime.utcnow().date())
+    updated_date = db.Column(db.DateTime,nullable=False, default=datetime.utcnow().date())
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+```
+
+Now run the main.py file and we can the server running and Instance folder is created in our root directory
